@@ -15,17 +15,5 @@ namespace API.Controllers
         {
             return View();
         }
-
-        /// <summary>
-        /// View page to register
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Route("Register")]
-        [SwaggerOperation("Register")]
-        public async Task<IActionResult> Register()
-        {
-            return Redirect("~/Identity/Register".ToLower());
-        }
     }
 }
