@@ -102,9 +102,6 @@ namespace API
                 }
                 
                 x.ModelValidatorProviders.Clear();
-
-                // Not need to have https
-                x.RequireHttpsPermanent = false;
             }).AddJsonOptions(x =>
             {
                 x.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -187,8 +184,6 @@ namespace API
             }
 
             app.UseDeveloperExceptionPage();
-            
-            app.UseHttpsRedirection();
             
             app.UseStaticFiles();
             
