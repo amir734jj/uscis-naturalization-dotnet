@@ -85,7 +85,7 @@ namespace API
 
             }).AddJwtBearer(options =>
             {
-                options.Authority = domain;
+                options.Authority = $"https://{domain}";
                 options.Audience = $"https://{domain}/api/v2/";
             });
 
