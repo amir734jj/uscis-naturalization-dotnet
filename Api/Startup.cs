@@ -1,14 +1,20 @@
 ﻿using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
+using System.Security.Claims;
 using API.Extensions;
 using API.Utilities;
 using Auth0.ManagementApi;
 using AutoMapper;
 using Dal.Utilities;
 using Logic.Interfaces;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using StructureMap;
 using Swashbuckle.AspNetCore.Swagger;
 
@@ -70,25 +77,83 @@ namespace API
             {
                 options.LowercaseUrls = true; 
             });
-
-            if (!_env.IsLocalhost())
-            {
-                services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
-                }).AddJwtBearer(options =>
-                {
-                    options.Authority = $"https://{domain}/";
-                    options.Audience = $"https://{domain}/api/v2/";
-                });
-            }
             
+            
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                options.CheckConsentNeeded = context => true;
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+
+            // Add authentication services
+            services.AddAuthentication(options => {
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddCookie()
+            .AddOAuth("Auth0", options => {
+                // Configure the Auth0 Client ID and Client Secret
+                options.ClientId = clientId;
+                options.ClientSecret = clientSecret;
+
+                // Set the callback path, so Auth0 will call back to http://localhost:5000/signin-auth0 
+                // Also ensure that you have added the URL as an Allowed Callback URL in your Auth0 dashboard 
+                options.CallbackPath = new PathString("/signin-auth0");
+
+                // Configure the Auth0 endpoints                
+                options.AuthorizationEndpoint = $"https://{domain}/authorize";
+                options.TokenEndpoint = $"https://{domain}/oauth/token";
+                options.UserInformationEndpoint = $"https://{domain}/userinfo";
+
+                // To save the tokens to the Authentication Properties we need to set this to true
+                // See code in OnTicketReceived event below to extract the tokens and save them as Claims
+                options.SaveTokens = true;
+
+                // Set scope to openid. See https://auth0.com/docs/scopes
+                options.Scope.Clear();
+                options.Scope.Add("openid");
+                options.Scope.Add("profile");
+                
+                options.Events = new OAuthEvents
+                {
+                    // When creating a ticket we need to manually make the call to the User Info endpoint to retrieve the user's information,
+                    // and subsequently extract the user's ID and email adddress and store them as claims
+                    OnCreatingTicket = async context =>
+                    {
+                        // Retrieve user info
+                        var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+                        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                        var response = await context.Backchannel.SendAsync(request, context.HttpContext.RequestAborted);
+                        response.EnsureSuccessStatusCode();
+
+                        // Extract the user info object
+                        var user = JObject.Parse(await response.Content.ReadAsStringAsync());
+
+                        // Add the Name Identifier claim
+                        var userId = user.Value<string>("sub");
+                        if (!string.IsNullOrEmpty(userId))
+                        {
+                            context.Identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userId, ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                        }
+
+                        // Add the Name claim
+                        var email = user.Value<string>("name");
+                        if (!string.IsNullOrEmpty(email))
+                        {
+                            context.Identity.AddClaim(new Claim(ClaimsIdentity.DefaultNameClaimType, email, ClaimValueTypes.String, context.Options.ClaimsIssuer));
+                        }
+                    }
+                };         
+            });
+
             // All the other service configuration.
             services.AddAutoMapper(x => { x.AddProfiles(Assembly.Load("Models")); });
 
-            services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new Info {Title = "Milwaukee-Internationals-API", Version = "v1"}); });
+            services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new Info {Title = "USCIS Naturalization Exam", Version = "v1"}); });
 
             services.AddMvc(x =>
             {
@@ -184,14 +249,21 @@ namespace API
 
             app.UseDeveloperExceptionPage();
             
-            app.UseAuthentication();
+            app.UseHttpsRedirection();
+            
+            app.UseStaticFiles();
+            
+            app.UseCookiePolicy();
+
+            if (!_env.IsLocalhost())
+            {
+                app.UseAuthentication();
+            }
 
             app.UseMvc(routes =>
             {
                 routes.MapRoute("default", "{controller=Home}/{action=Index}");
             });
-
-            app.UseStaticFiles();
 
             // Just to make sure everything is running fine
             _container.GetInstance<EntityDbContext>();
