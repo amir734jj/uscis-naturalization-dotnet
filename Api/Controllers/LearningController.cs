@@ -1,16 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using API.Attributes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
-    [Authorize]
+    [AuthorizeMiddleware]
     [Route("[controller]")]
     public class LearningController : Controller
     {
-        [Route("")]
-        public IActionResult Index()
-        {
-            return View();
-        }
+
     }
 }

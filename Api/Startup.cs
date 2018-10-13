@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
-using System.Security.Claims;
+using API.Attributes;
 using API.Extensions;
 using API.Utilities;
-using Auth0.ManagementApi;
 using AutoMapper;
 using Dal.Utilities;
 using Logic.Interfaces;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -20,9 +14,9 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Models.Constants;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
 using StructureMap;
 using Swashbuckle.AspNetCore.Swagger;
 
@@ -56,7 +50,18 @@ namespace API
         /// <param name="services"></param>
         /// <returns></returns>
         public IServiceProvider ConfigureServices(IServiceCollection services)
-        {            
+        {          
+            services.AddDistributedMemoryCache();
+            
+            services.AddSession(options =>
+            {
+                // Set a short timeout for easy testing.
+                options.IdleTimeout = TimeSpan.FromMinutes(50);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.Name = ApiConstants.AuthenticationSessionCookieName;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy",
@@ -66,29 +71,12 @@ namespace API
                         .AllowCredentials()
                         .Build());
             });
-            
-            var (domain, clientId, clientSecret) = (
-                EnvironmentUtility.GetEnvironmentVariableOrDefault("AUTH0_DOMAIN"),
-                EnvironmentUtility.GetEnvironmentVariableOrDefault("AUTH0_CLIENT_ID"),
-                EnvironmentUtility.GetEnvironmentVariableOrDefault("AUTH0_CLIENT_SECRET")
-            );
 
             services.AddRouting(options =>
             {
                 options.LowercaseUrls = true; 
             });
             
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
-            }).AddJwtBearer(options =>
-            {
-                options.Authority = $"https://{domain}";
-                options.Audience = $"https://{domain}/api/v2/";
-            });
-
             // All the other service configuration.
             services.AddAutoMapper(x => { x.AddProfiles(Assembly.Load("Models")); });
 
@@ -100,6 +88,9 @@ namespace API
                 {
                     x.Filters.Add<AllowAnonymousFilter>();
                 }
+                
+                // Authorize
+                x.Filters.Add<AuthorizeActionFilter>();
                 
                 x.ModelValidatorProviders.Clear();
             }).AddJsonOptions(x =>
@@ -141,19 +132,6 @@ namespace API
                     }
                 })).Transient();
                 
-
-                config.For<IManagementApiClient>().Use("`Auth0` client", x =>
-                {
-                    // Get management token
-                    var token = Auth0TokenUtility.GetAuth0ManagementToken(domain, clientId, clientSecret);
-
-                    // Initialize management client
-                    var auth0ManagementApiClient = new ManagementApiClient(token, new Uri($"https://{domain}/api/v2"));
-
-                    // Return client
-                    return auth0ManagementApiClient;
-                });
-                    
                 // It has to be a singleton
                 config.For<IIdentityDictionary>().Singleton();
                 
@@ -186,8 +164,10 @@ namespace API
             app.UseDeveloperExceptionPage();
             
             app.UseStaticFiles();
-            
+                        
             app.UseCookiePolicy();
+
+            app.UseSession();
 
             if (!_env.IsLocalhost())
             {

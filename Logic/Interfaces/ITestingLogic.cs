@@ -3,8 +3,8 @@ using Models;
 
 namespace Logic.Interfaces
 {
-    public interface IUserLogic : IBasicCrudLogic<User>
+    public interface ITestingLogic
     {
-
+        Task<bool> SetScore(User user, int offset);
     }
 }

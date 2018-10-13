@@ -15,7 +15,7 @@ namespace Models.Constants
         
         public const string Username = "Username";
 
-        public const string Password = "Password";
+        public const string PasswordHash = "PasswordHash";
         
         public const string WebSiteUrl = "https://uscis-naturalization.herokuapp.com";
         

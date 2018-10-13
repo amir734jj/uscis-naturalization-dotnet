@@ -1,18 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Linq;
+using Microsoft.AspNetCore.Http;
 using Models.Constants;
+using Models.ViewModels;
 
 namespace API.Extensions
 {
-    /// <summary>
-    /// UserInfo Struct
-    /// </summary>
-    public struct UserInfo
-    {
-        public string Username { get; set; }
-        
-        public string Password { get; set; }
-    }
-    
     public static class SessionExtension
     {
         /// <summary>
@@ -20,20 +12,18 @@ namespace API.Extensions
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public static UserInfo GetUserInfo(this ISession session)
-        {            
-            return new UserInfo
+        public static SessionPayload GetUserInfo(this ISession session)
+        {
+            if (session == null || !session.IsAvailable || !session.Keys.Contains(ApiConstants.Username) || !session.Keys.Contains(ApiConstants.PasswordHash))
+            {
+                return null;
+            }
+            
+            return new SessionPayload
             {
                 Username = session.GetString(ApiConstants.Username),
-                Password = session.GetString(ApiConstants.Password)
+                PasswordHash = session.GetString(ApiConstants.PasswordHash)
             };
         }
-
-        /// <summary>
-        /// Extension method to check whether user is logged in or not
-        /// </summary>
-        /// <param name="session"></param>
-        /// <returns></returns>
-        public static bool IsAuthenticated(this ISession session) => session.GetString(ApiConstants.Authenticated.Key) == ApiConstants.Authenticated.Value;
     }
 }

@@ -1,11 +1,19 @@
-﻿namespace Logic.Interfaces
+﻿using System.Threading.Tasks;
+using Models;
+using Models.ViewModels;
+
+namespace Logic.Interfaces
 {
     public interface IIdentityLogic
     {        
-        void TryLogin(string username, string password, out bool result);
+        Task<bool> Register(RegisterViewModel user);
 
-        void TryLogout(string username, string password, out bool resul);
+        Task<SessionPayload> Login(LoginViewModel loginViewModel);
 
-        bool IsAuthenticated(string username, string password);
+        Task<bool> Logout(SessionPayload sessionPayload);
+
+        Task<bool> Authenticated(SessionPayload sessionPayload);
+
+        Task<User> SessionInfoToUser(SessionPayload sessionPayload);
     }
 }

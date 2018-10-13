@@ -31,4 +31,11 @@
   <ItemGroup>
     <ProjectReference Include="..\Logic\Logic.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\Testing\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Learning\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="wwwroot\style\bootstrap.min.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\style\layout.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\style\style.css" />
+  </ItemGroup>
 </Project>

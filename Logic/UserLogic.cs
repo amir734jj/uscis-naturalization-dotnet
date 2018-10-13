@@ -47,15 +47,5 @@ namespace Logic
             return await base.Save(instance);
         }
 
-        /// <summary>
-        /// Sets the user score given an offset
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public async Task<bool> SetScore(int id, int offset)
-        {
-            return await _userDal.Update(id, user => { user.Score += offset; }) != null;
-        }
     }
 }
