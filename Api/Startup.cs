@@ -164,15 +164,12 @@ namespace API
         {
             app.UseCors("CorsPolicy");
 
-            if (_env.IsLocalhost())
-            {
-                // Enable middleware to serve generated Swagger as a JSON endpoint.
-                app.UseSwagger();
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
 
-                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
-                // specifying the Swagger JSON endpoint.
-                app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"); });
-            }
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"); });
 
             app.UseDeveloperExceptionPage();
             
@@ -181,11 +178,6 @@ namespace API
             app.UseCookiePolicy();
 
             app.UseSession();
-
-            if (!_env.IsLocalhost())
-            {
-                app.UseAuthentication();
-            }
 
             app.UseMvc(routes =>
             {
