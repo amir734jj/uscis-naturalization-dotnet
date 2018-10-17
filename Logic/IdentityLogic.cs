@@ -99,7 +99,7 @@ namespace Logic
             // Authenticate the user
             if (_authenticatedUsers.ContainsKey(username))
             {
-                _authenticatedUsers.Remove(username, out var _);
+                _authenticatedUsers.Remove(username, out _);
 
                 // Out the flag
                 return true;

@@ -50,18 +50,7 @@ namespace API
         /// <param name="services"></param>
         /// <returns></returns>
         public IServiceProvider ConfigureServices(IServiceCollection services)
-        {          
-            services.AddDistributedMemoryCache();
-            
-            services.AddSession(options =>
-            {
-                // Set a short timeout for easy testing.
-                options.IdleTimeout = TimeSpan.FromMinutes(50);
-                options.Cookie.HttpOnly = true;
-                options.Cookie.Name = ApiConstants.AuthenticationSessionCookieName;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-            });
-
+        {                      
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy",
@@ -75,6 +64,17 @@ namespace API
             services.AddRouting(options =>
             {
                 options.LowercaseUrls = true; 
+            });
+
+            services.AddDistributedMemoryCache();
+            
+            services.AddSession(options =>
+            {
+                // Set a short timeout for easy testing.
+                options.IdleTimeout = TimeSpan.FromMinutes(50);
+                options.Cookie.HttpOnly = false;
+                options.Cookie.Name = ApiConstants.AuthenticationSessionCookieName;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.None;
             });
             
             // All the other service configuration.
@@ -93,6 +93,9 @@ namespace API
                 x.Filters.Add<AuthorizeActionFilter>();
                 
                 x.ModelValidatorProviders.Clear();
+                
+                // Not need to have https
+                x.RequireHttpsPermanent = false;
             }).AddJsonOptions(x =>
             {
                 x.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -119,7 +122,7 @@ namespace API
                 config.Populate(services);
 
                 // EntityDbContext builder
-                Func<EntityDbContext> entityDbContextBuilderFunc = () => new EntityDbContext(builder =>
+                var entityDbContextBuilderFunc = new Func<EntityDbContext>(() => new EntityDbContext(builder =>
                 {
                     if (_env.IsLocalhost())
                     {
@@ -140,7 +143,7 @@ namespace API
                             builder.UseInMemoryDatabase(Guid.NewGuid().ToString());
                         }
                     }
-                });
+                }));
 
                 // Build the DbContext builder
                 config.For<EntityDbContext>().Use(() => entityDbContextBuilderFunc()).Transient();
@@ -172,9 +175,7 @@ namespace API
             app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1"); });
 
             app.UseDeveloperExceptionPage();
-            
-            app.UseStaticFiles();
-                        
+                                    
             app.UseCookiePolicy();
 
             app.UseSession();
@@ -183,6 +184,8 @@ namespace API
             {
                 routes.MapRoute("default", "{controller=Home}/{action=Index}");
             });
+            
+            app.UseStaticFiles();
 
             // Just to make sure everything is running fine
             _container.GetInstance<EntityDbContext>();
