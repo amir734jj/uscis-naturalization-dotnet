@@ -47,7 +47,7 @@ namespace API.Attributes
                 else
                 {
                     // Redirect to not-authenticated
-                    context.HttpContext.Response.Redirect($"{ApiConstants.WebSiteUrl}/Identity/NotAuthenticated");
+                    context.HttpContext.Response.Redirect($"{ApiConstants.WebSiteApiUrl}/Identity/NotAuthenticated");
                 }
             }
         }
