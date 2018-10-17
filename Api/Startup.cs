@@ -118,7 +118,8 @@ namespace API
                 // Populate the container using the service collection
                 config.Populate(services);
 
-                config.For<EntityDbContext>().Use(new EntityDbContext(builder =>
+                // EntityDbContext builder
+                Func<EntityDbContext> entityDbContextBuilderFunc = () => new EntityDbContext(builder =>
                 {
                     if (_env.IsLocalhost())
                     {
@@ -126,11 +127,23 @@ namespace API
                     }
                     else
                     {
-                        builder.UseNpgsql(
-                            SqlConnectionStringUtility.ConnectionStringUrlToResource(Environment.GetEnvironmentVariable("DATABASE_URL"))
-                            ?? throw new Exception("DATABASE_URL is null"));
+                        var pqConnectionString =
+                            SqlConnectionStringUtility.ConnectionStringUrlToResource(
+                                Environment.GetEnvironmentVariable("DATABASE_URL"));
+
+                        if (!string.IsNullOrEmpty(pqConnectionString))
+                        {
+                            builder.UseNpgsql(pqConnectionString);
+                        }
+                        else
+                        {
+                            builder.UseInMemoryDatabase(Guid.NewGuid().ToString());
+                        }
                     }
-                })).Transient();
+                });
+
+                // Build the DbContext builder
+                config.For<EntityDbContext>().Use(() => entityDbContextBuilderFunc()).Transient();
                 
                 // It has to be a singleton
                 config.For<IIdentityDictionary>().Singleton();

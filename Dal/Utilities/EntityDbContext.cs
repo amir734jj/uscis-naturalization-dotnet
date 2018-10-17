@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Models;
 using DbContext = Microsoft.EntityFrameworkCore.DbContext;
 
@@ -20,7 +21,6 @@ namespace Dal.Utilities
             _onConfiguring = dbContextOptionsBuilderAction;
             
             Database.EnsureCreated();
-            Database.Migrate();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _onConfiguring(optionsBuilder);

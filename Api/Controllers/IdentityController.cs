@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using API.Attributes;
 using API.Extensions;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -88,6 +89,19 @@ namespace API.Controllers
             }
 
             return BadRequest("Failed to log-out");
+        }
+        
+        /// <summary>
+        /// Is Authenticated or not
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("IsAuthenticated")]
+        [SwaggerOperation("NotAuthenticated")]
+        [AuthorizeMiddleware]
+        public async Task<IActionResult> IsAuthenticated()
+        {
+            return Ok("Authenticated");
         }
         
         /// <summary>

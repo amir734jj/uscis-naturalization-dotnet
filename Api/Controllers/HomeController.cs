@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using API.Extensions;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -10,9 +11,20 @@ namespace API.Controllers
     [ApiExplorerSettings(IgnoreApi = true)]
     public class HomeController : Controller
     {
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public IActionResult Index()
         {
             return View();
+        }
+        
+        /// <summary>
+        /// Echos response
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IActionResult Echo()
+        {
+            return Ok(Environment.Version);
         }
     }
 }

@@ -13,7 +13,6 @@ namespace Logic
     public class IdentityLogic : IIdentityLogic
     {
         private readonly IUserLogic _userLogic;
-        
         private readonly ConcurrentDictionary<string, string> _authenticatedUsers;
         private readonly IMapper _mapper;
 
@@ -114,7 +113,7 @@ namespace Logic
         /// </summary>
         /// <param name="sessionPayload"></param>
         /// <returns></returns>
-        public async Task<bool> Authenticated(SessionPayload sessionPayload)
+        public async Task<bool> IsAuthenticated(SessionPayload sessionPayload)
         {
             // Nothing needs to be done
             if (sessionPayload == null)
@@ -124,7 +123,7 @@ namespace Logic
 
             var (username, passwordHash) = (sessionPayload.Username, sessionPayload.PasswordHash);
 
-            return _authenticatedUsers.Any(x => x.Key == username && x.Value == passwordHash);
+            return await Task.FromResult(_authenticatedUsers.Any(x => x.Key == username && x.Value == passwordHash));
         }
 
         public async Task<User> SessionInfoToUser(SessionPayload sessionPayload)

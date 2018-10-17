@@ -12,7 +12,7 @@ namespace Logic.Interfaces
 
         Task<bool> Logout(SessionPayload sessionPayload);
 
-        Task<bool> Authenticated(SessionPayload sessionPayload);
+        Task<bool> IsAuthenticated(SessionPayload sessionPayload);
 
         Task<User> SessionInfoToUser(SessionPayload sessionPayload);
     }

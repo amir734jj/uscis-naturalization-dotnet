@@ -38,7 +38,7 @@ namespace API.Attributes
                 var userInfo = context.HttpContext.Session.GetUserInfo();
 
                 // Validate username/password
-                var result = await _identityLogic.Authenticated(userInfo);
+                var result = await _identityLogic.IsAuthenticated(userInfo);
 
                 if (result)
                 {
