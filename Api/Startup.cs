@@ -75,6 +75,7 @@ namespace API
                 options.Cookie.HttpOnly = false;
                 options.Cookie.Name = ApiConstants.AuthenticationSessionCookieName;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+                options.Cookie.SameSite = SameSiteMode.None;
             });
             
             // All the other service configuration.
