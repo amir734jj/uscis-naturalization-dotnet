@@ -4,12 +4,13 @@ using API.Extensions;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Models.ViewModels;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace API.Controllers
 {
     [AuthorizeMiddleware]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class TestingController : Controller
     {
         private readonly IIdentityLogic _identityLogic;
@@ -25,12 +26,13 @@ namespace API.Controllers
         /// Returns driver view
         /// </summary>
         /// <returns></returns>
-        [HttpGet]
-        [Route("")]
-        [SwaggerOperation("Index")]
-        public async Task<IActionResult> SetScore([FromBody] int offset)
+        [HttpPut]
+        [Route("Score")]
+        [SwaggerOperation("Score")]
+        public async Task<IActionResult> Score([FromBody] ScoreUpdateViewModel scoreUpdateViewModel)
         {
-            return Ok(_testingLogic.SetScore(await _identityLogic.SessionInfoToUser(HttpContext.Session.GetUserInfo()), offset));
+            return Ok(_testingLogic.SetScore(await _identityLogic.SessionInfoToUser(HttpContext.Session.GetUserInfo()),
+                scoreUpdateViewModel.Offset));
         }
     }
 }
