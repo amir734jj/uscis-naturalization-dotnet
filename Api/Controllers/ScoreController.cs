@@ -32,8 +32,10 @@ namespace API.Controllers
         public async Task<IActionResult> Score([FromBody] ScoreUpdateViewModel scoreUpdateViewModel)
         {
             var info = await _identityLogic.SessionInfoToUser(HttpContext.Session.GetUserInfo());
+
+            var result = await _testingLogic.SetScore(info, scoreUpdateViewModel.Offset);
             
-            return Ok(await _testingLogic.SetScore(info, scoreUpdateViewModel.Offset));
+            return Ok(result);
         }
     }
 }
