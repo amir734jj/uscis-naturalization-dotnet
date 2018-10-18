@@ -11,12 +11,12 @@ namespace API.Controllers
 {
     [AuthorizeMiddleware]
     [Route("api/[controller]")]
-    public class TestingController : Controller
+    public class ScoreController : Controller
     {
         private readonly IIdentityLogic _identityLogic;
         private readonly ITestingLogic _testingLogic;
 
-        public TestingController(IIdentityLogic identityLogic, ITestingLogic testingLogic)
+        public ScoreController(IIdentityLogic identityLogic, ITestingLogic testingLogic)
         {
             _identityLogic = identityLogic;
             _testingLogic = testingLogic;
@@ -27,7 +27,7 @@ namespace API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPut]
-        [Route("Score")]
+        [Route("")]
         [SwaggerOperation("Score")]
         public async Task<IActionResult> Score([FromBody] ScoreUpdateViewModel scoreUpdateViewModel)
         {
