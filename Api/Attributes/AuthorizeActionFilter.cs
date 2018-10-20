@@ -32,11 +32,7 @@ namespace API.Attributes
             var controllerLevelAuthorize = controller.GetType().GetCustomAttribute<AuthorizeMiddlewareAttribute>();
             var actionLevelAuthorize = method.GetCustomAttribute<AuthorizeMiddlewareAttribute>();
 
-            if (!_hostingEnvironment.IsLocalhost())
-            {
-                await next();
-            }
-            else if (controllerLevelAuthorize == null && actionLevelAuthorize == null)
+            if (controllerLevelAuthorize == null && actionLevelAuthorize == null)
             {
                 await next();
             }
