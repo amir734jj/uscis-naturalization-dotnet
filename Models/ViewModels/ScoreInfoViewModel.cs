@@ -6,6 +6,6 @@ namespace Models.ViewModels
     {
         public int Score { get; set; }
         
-        public Dictionary<string, int> ScoreBoard { get; set; }
+        public Dictionary<string, int> Board { get; set; }
     }
 }

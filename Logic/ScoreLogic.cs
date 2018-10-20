@@ -36,7 +36,7 @@ namespace Logic
             return new ScoreInfoViewModel
             {
                 Score = (await _userLogic.Get(user.Id)).Score,
-                ScoreBoard = (await _userLogic.GetAll()).ToDictionary(x => x.Fullname, x => x.Score)
+                Board = (await _userLogic.GetAll()).ToDictionary(x => x.Fullname, x => x.Score)
             };
         }
     }
