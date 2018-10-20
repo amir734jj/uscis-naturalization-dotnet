@@ -14,16 +14,32 @@ namespace API.Controllers
     public class ScoreController : Controller
     {
         private readonly IIdentityLogic _identityLogic;
-        private readonly ITestingLogic _testingLogic;
+        private readonly IScoreLogic _scoreLogic;
 
-        public ScoreController(IIdentityLogic identityLogic, ITestingLogic testingLogic)
+        public ScoreController(IIdentityLogic identityLogic, IScoreLogic scoreLogic)
         {
             _identityLogic = identityLogic;
-            _testingLogic = testingLogic;
+            _scoreLogic = scoreLogic;
         }
         
         /// <summary>
-        /// Returns driver view
+        /// Returns score info
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("")]
+        [SwaggerOperation("ScoreInfo")]
+        public async Task<IActionResult> ScoreInfo()
+        {
+            var info = await _identityLogic.SessionInfoToUser(HttpContext.Session.GetUserInfo());
+
+            var result = await _scoreLogic.ScoreInfo(info);
+            
+            return Ok(result);
+        }
+        
+        /// <summary>
+        /// Updates the score
         /// </summary>
         /// <returns></returns>
         [HttpPut]
@@ -33,7 +49,7 @@ namespace API.Controllers
         {
             var info = await _identityLogic.SessionInfoToUser(HttpContext.Session.GetUserInfo());
 
-            var result = await _testingLogic.SetScore(info, scoreUpdateViewModel.Offset);
+            var result = await _scoreLogic.SetScore(info, scoreUpdateViewModel.Offset);
             
             return Ok(result);
         }
